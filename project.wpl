@@ -1,0 +1,5 @@
+main : "src/main"
+
+dependencies : {
+    botball : git "https://github.com/tyngsboroughrobotics/botball master"
+}

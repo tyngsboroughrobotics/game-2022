@@ -1,0 +1,43 @@
+Copyright (c) 2021 Tyngsborough High School Robotics Team. All rights reserved.
+
+The code in this repository contains our team's code for our strategy in the
+Botball competition. While other teams may use it for guidance and inspiration,
+it would be cheating and against the spirit of the game to directly use our code
+for your team's robots. Therefore there are some conditions attached to the use
+of the contents of this repository:
+
+1. Viewing the contents of this repository, which contains our strategy, is
+   allowed for guidance and inspiration only, and not for use or incorporation
+   into your robotics team's code.
+
+2. After December 31, 2021, the contents of this repository as of December 31,
+   2021 are available for everyone to view and use under the MIT License printed
+   below. Since we may use this repository for another strategy in the future,
+   changes to this repository made after December 31, 2021 are subject to the
+   license of the game-2022 repository (or, if this repository does not exist,
+   are licensed under clause 1). Please check the commit log to ensure you are
+   using the repository as it was found on December 31, 2021 (ie. does not
+   contain any commits made after this date).
+
+3. Students of Tyngsborough High School, located in Tyngsborough, Massachusetts,
+   United States, are not subject to clause 1.
+
+MIT License (subject to the above conditions)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

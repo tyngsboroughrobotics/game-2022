@@ -1,0 +1,3 @@
+use botball
+
+show "Hello, world!"
