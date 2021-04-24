@@ -20,4 +20,5 @@ Development requires a Wombat controller and a computer running macOS, Linux or 
 2. Clone the repository to your computer and open it in your favorite editor.
 3. Make changes as needed.
 4. Connect to your Wombat and use `install.sh` to copy the code to the robot.
+   - You'll need to enter the password to the Wombat (`wallaby` by default), or you can [use SSH keys](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-2).
 5. Run the code from the program selector, or use `run.sh` to run it remotely.

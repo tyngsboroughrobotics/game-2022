@@ -1,2 +1,6 @@
-echo "Work in progress!"
-exit 1
+#!/bin/bash
+
+set -e
+source ./scripts/config.sh
+
+ssh -t $WOMBAT "$BIN"
