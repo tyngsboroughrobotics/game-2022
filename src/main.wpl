@@ -1,3 +1,8 @@
 use botball
 
-show "Hello, world!"
+show "Running!"
+
+enable_servos
+set_servo_position 0 1500
+
+show "Done!"
