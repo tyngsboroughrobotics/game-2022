@@ -4,7 +4,7 @@
   <img src="https://i.postimg.cc/3NZfHT1n/THS-Robotics-Logo-Dual.png" height=240>
 </p>
 
-This repository holds the code for the Tyngsborough High School Robotics team's 2021 Botball game strategy.
+This repository holds the code for the Tyngsborough High School Robotics team's 2022 Botball game strategy.
 
 We developed and are using the [`botball`](https://github.com/tyngsboroughrobotics/botball) library for the [Wipple programming language](https://wipple.gramer.dev). The library is open source and we encourage other teams to use it and contribute!
 
