@@ -1,5 +1,4 @@
 #include <kipr/wombat.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "wheels.h"
@@ -19,13 +18,13 @@ int main() {
             .port = 1,
             .speed = 1.0,
         },
-        .left_offset = 0.975,
+        .left_offset = 1.1,
         .right_offset = 1.0,
     };
 
     camera_open();
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 2; i++) {
         drive_wheels(wheels, FORWARD, IN(6));
 
         for (int i = 0; i < 10; i++) {
