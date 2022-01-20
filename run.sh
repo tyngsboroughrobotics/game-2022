@@ -21,7 +21,7 @@ sshpass -p $PASSWORD ssh $USER "
     unzip -q game.zip -d .
     rm game.zip
     mkdir -p bin
-    gcc -o bin/botball_user_program -std=c11 -lwallaby -lpthread -lm -Iinclude -Wall -g src/*.c
+    gcc -o bin/botball_user_program -std=c11 -lwallaby -lpthread -lm -Iwheels -Wall -g src/$1.c wheels/*.c
     echo '==> Running...'
     ./bin/botball_user_program
 "
