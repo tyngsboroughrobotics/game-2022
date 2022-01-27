@@ -11,6 +11,10 @@
 const int red_channel = 0;
 const int green_channel = 1;
 
+const Servo plow_servo = {
+    .port = 0,
+};
+
 const Motor plow_winch = {
     .port = 2,
     .speed = 1.0,
@@ -19,27 +23,30 @@ const Motor plow_winch = {
 const Wheels wheels = {
     .left_motor = {
         .port = 0,
-        .speed = 1.0,
+        .speed = 0.5, //1.0,
     },
     .right_motor = {
         .port = 1,
-        .speed = 1.0,
+        .speed = 0.5, //1.0,
     },
     .left_offset = 1.25,
     .right_offset = 1.0,
 };
 
 void collect_pom(TurnDirection direction);
+void raise_plow();
+void lower_plow();
 void open_plow();
 void close_plow();
 
 int main() {
     camera_open();
+
+    raise_plow();
     open_plow();
+    lower_plow();
 
     for (int i = 0; i < 1; i++) {
-        drive_wheels(wheels, FORWARD, IN(6));
-
         for (int i = 0; i < 10; i++) {
             camera_update();
         }
@@ -54,10 +61,14 @@ int main() {
             collect_pom(RIGHT);
         }
 
-        msleep(2000);
+        drive_wheels(wheels, FORWARD, IN(6));
+
+        msleep(2000); // TODO: TEMPORARY
     }
 
     close_plow();
+    raise_plow();
+
     camera_close();
 
     return 0;
@@ -78,6 +89,16 @@ void collect_pom(TurnDirection direction) {
 }
 
 const int plow_open_amount = CM(100);
+const int plow_raised_position = 750;
+const int plow_lowered_position = 1055;
+
+void raise_plow() {
+    set_servo(plow_servo, plow_raised_position);
+}
+
+void lower_plow() {
+    set_servo(plow_servo, plow_lowered_position);
+}
 
 void open_plow() {
     drive_motor(plow_winch, FORWARD, plow_open_amount);

@@ -107,3 +107,9 @@ double wheels_turn_amount(double degrees) {
 
     return degrees * multiplier / 10.0;
 }
+
+void set_servo(Servo servo, int position) {
+    enable_servos();
+    set_servo_position(servo.port, position);
+    msleep(750);
+}

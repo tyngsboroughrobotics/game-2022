@@ -51,4 +51,10 @@ int calculate_velocity(double speed, DriveDirection direction, double offset);
 
 double wheels_turn_amount(double degrees);
 
+typedef struct {
+    int port;
+} Servo;
+
+void set_servo(Servo servo, int position);
+
 #endif /* WHEELS_H_ */
