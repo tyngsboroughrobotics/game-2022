@@ -7,6 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Signatures
+void out_box();
+void drive(double l_seconds, double r_seconds);
+
 const int basket = 0;
 
 int main() {
