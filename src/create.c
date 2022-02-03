@@ -21,15 +21,14 @@ int main() {
    return 0;
 }
 
-/*void out_box(){
-// msleep(5000);
-   drive()
-   msleep(2400);
-   create_stop();
-   create_disconnect();
+void out_box(){
+    msleep(5000);
+    drive(1, 1);
+    msleep(2400);
+    create_stop();
+    create_disconnect();
 }
 
 void drive(double l_seconds, double r_seconds){
    create_drive_direct(l_seconds*1000, r_seconds*1000);
 }
-*/
