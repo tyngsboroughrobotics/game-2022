@@ -10,6 +10,7 @@
 // Signatures
 void out_box();
 void drive(int l_velocity, int r_velocity, int duration);
+void drive_max_speed(int duration);
 void open_basket_full();
 void close_basket_full();
 void open_basket_partway();
@@ -39,17 +40,23 @@ void out_box(){
 
     open_basket_partway();
     msleep(start_wait_time);
-    drive(1000, 1000, time_to_cross);
+    drive_max_speed(time_to_cross);
     turn_r(90);
-    drive(1000, 1000, 1400);
+    drive_max_speed(1400);
     turn_l(95);
-    drive(1000, 1000, 300);
+    drive_max_speed(300);
     close_basket_partway();
     create_disconnect();
 }
 
 void drive(int l_velocity, int r_velocity, int duration){
    create_drive_direct(l_velocity, r_velocity);
+   msleep(duration);
+   create_stop();
+}
+
+void drive_max_speed(int duration){
+   create_drive_direct(1000, 1000);
    msleep(duration);
    create_stop();
 }
