@@ -16,14 +16,15 @@ void close_basket_full();
 void open_basket_partway();
 void close_basket_partway();
 void move_motor(int port, int velocity, int duration);
-void turn_l(int degrees);
-void turn_r(int degrees);
+void turn_l(double degrees);
+void turn_r(double degrees);
 
 // Variables
 const int basket = 0;
 const int basket_full_open_duration = 8000;
 const int basket_partway_duration = 2000;
-const double ticks_per_degree = 4.25;
+const double ticks_per_degree = 4.153;
+const double turn_sleep_time = 50;
 
 int main() {
    printf("Starting Up...\n");
@@ -43,8 +44,8 @@ void out_box(){
     drive_max_speed(time_to_cross);
     turn_r(90);
     drive_max_speed(1400);
-    turn_l(95);
-    drive_max_speed(300);
+    turn_l(98);
+    drive_max_speed(100);
     close_basket_partway();
     create_disconnect();
 }
@@ -81,10 +82,12 @@ void move_motor(int port, int velocity, int duration){
     ao();
 }
 
-void turn_l(int degrees){
-    drive(-1000, 1000, (int) (degrees * ticks_per_degree));
+void turn_l(double degrees){
+    drive(-1000, 1000, (degrees * ticks_per_degree));
+    msleep(turn_sleep_time);
 }
 
-void turn_r(int degrees){
-    drive(1000, -1000, (int) (degrees * ticks_per_degree));
+void turn_r(double degrees){
+    drive(1000, -1000, (degrees * ticks_per_degree));
+    msleep(turn_sleep_time);
 }
