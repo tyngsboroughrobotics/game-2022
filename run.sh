@@ -4,6 +4,11 @@ USER="pi@raspberrypi.local"
 PASSWORD="wallaby"
 PROJECT_PATH="/home/root/Documents/KISS/KIPR/botball-2022"
 
+if ! [[ $1 ]]; then
+    echo "Please provide the name of the file you want to install (eg. 'demobot' or 'create')"
+    exit 1
+fi
+
 echo "==> Installing..."
 
 sshpass -p $PASSWORD ssh $USER "
@@ -17,6 +22,7 @@ sshpass -p $PASSWORD scp game.zip $USER:$PROJECT_PATH
 rm game.zip
 
 sshpass -p $PASSWORD ssh $USER "
+    set -e
     cd $PROJECT_PATH
     unzip -q game.zip -d .
     rm game.zip
