@@ -8,6 +8,11 @@
 #include <stdlib.h>
 #include "wheels.h"
 
+void collect_pom(TurnDirection direction);
+void raise_plow();
+void lower_plow();
+Motor plow_motor_for_direction(TurnDirection direction);
+
 const int red_channel = 0;
 const int green_channel = 1;
 
@@ -15,35 +20,41 @@ const Servo plow_servo = {
     .port = 0,
 };
 
-const Motor plow_winch = {
+const Motor plow_left = {
     .port = 2,
+    .speed = 1.0,
+};
+
+const Motor plow_right = {
+    .port = 3,
     .speed = 1.0,
 };
 
 const Wheels wheels = {
     .left_motor = {
         .port = 0,
-        .speed = 0.5, //1.0,
+        .speed = 1.0,
     },
     .right_motor = {
         .port = 1,
-        .speed = 0.5, //1.0,
+        .speed = 1.0,
     },
     .left_offset = 1.25,
     .right_offset = 1.0,
 };
 
-void collect_pom(TurnDirection direction);
-void raise_plow();
-void lower_plow();
-void open_plow();
-void close_plow();
-
 int main() {
+    // lower_plow();
+    collect_pom(RIGHT);
+
+    // motor(plow_left.port, 100);
+    // msleep(5000);
+    // off(plow_left.port);
+
+    return 0;
+
     camera_open();
 
-    raise_plow();
-    open_plow();
     lower_plow();
 
     for (int i = 0; i < 1; i++) {
@@ -63,10 +74,9 @@ int main() {
 
         drive_wheels(wheels, FORWARD, IN(6));
 
-        msleep(2000); // TODO: TEMPORARY
+        msleep(2000); // FIXME: TEMPORARY
     }
 
-    close_plow();
     raise_plow();
 
     camera_close();
@@ -76,34 +86,34 @@ int main() {
 
 void collect_pom(TurnDirection direction) {
     const double turn_amount = 30.0;
-    const double drive_amount = CM(10.0);
+    const double drive_amount = IN(6.0);
+
+    Motor plow_motor = plow_motor_for_direction(direction);
 
     // Turn to collect the poms
+    motor(plow_motor.port, 100);
     turn_wheels(wheels, direction, turn_amount);
     drive_wheels(wheels, FORWARD, drive_amount);
 
     // Get back on track
-    turn_wheels(wheels, !direction, turn_amount * 2);
-    drive_wheels(wheels, FORWARD, drive_amount);
-    turn_wheels(wheels, direction, turn_amount);
+    drive_wheels(wheels, REVERSE, drive_amount);
+    off(plow_motor.port);
+    turn_wheels(wheels, !direction, turn_amount);
 }
 
-const int plow_open_amount = CM(100);
-const int plow_raised_position = 750;
-const int plow_lowered_position = 1055;
-
 void raise_plow() {
-    set_servo(plow_servo, plow_raised_position);
+    set_servo(plow_servo, 750);
 }
 
 void lower_plow() {
-    set_servo(plow_servo, plow_lowered_position);
+    set_servo(plow_servo, 1000);
 }
 
-void open_plow() {
-    drive_motor(plow_winch, FORWARD, plow_open_amount);
-}
-
-void close_plow() {
-    drive_motor(plow_winch, REVERSE, plow_open_amount);
+Motor plow_motor_for_direction(TurnDirection direction) {
+    switch (direction) {
+    case LEFT:
+        return plow_right;
+    default:
+        return plow_left;
+    }
 }
