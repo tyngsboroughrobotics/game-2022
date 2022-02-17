@@ -25,6 +25,11 @@ const Servo splitter_servo = {
     .port = 1,
 };
 
+const Motor spinner_motor = {
+    .port = 2,
+    .speed = 1.0,
+};
+
 const Wheels wheels = {
     .left_motor = {
         .port = 0,
@@ -60,6 +65,8 @@ int main() {
     raise_arm();
     reset_splitter();
 
+    int space_between_poms = IN(6);
+
     for (int i = 0; i < 5; i++) {
         // Update multiple times to get better accuracy
         for (int i = 0; i < 10; i++) {
@@ -85,10 +92,27 @@ int main() {
 
         reset_splitter();
 
-        drive_wheels(wheels, FORWARD, IN(6) - forward_distance - CM(1));
+        drive_wheels(wheels, FORWARD, space_between_poms - forward_distance - CM(1));
 
         // msleep(5000); // FIXME: TEMPORARY
     }
+
+    msleep(2000); // FIXME: TEMPORARY
+
+    // Go back and collect the poms
+    // TODO: Put into function
+
+    drive_wheels(wheels, REVERSE, space_between_poms * 4);
+
+    turn_wheels(wheels, LEFT, 120);
+    drive_wheels(wheels, FORWARD, CM(22));
+    turn_wheels(wheels, RIGHT, 120);
+
+    lower_arm();
+
+    motor(spinner_motor.port, 100);
+    drive_wheels(wheels, FORWARD, space_between_poms * 4);
+    off(spinner_motor.port);
 
     camera_close();
 
