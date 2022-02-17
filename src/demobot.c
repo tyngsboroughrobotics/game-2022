@@ -8,26 +8,21 @@
 #include <stdlib.h>
 #include "wheels.h"
 
-void collect_pom(TurnDirection direction);
-void raise_plow();
-void lower_plow();
-Motor plow_motor_for_direction(TurnDirection direction);
+void raise_arm();
+void lower_arm();
+void reset_splitter();
+void split_pom_left();
+void split_pom_right();
 
 const int red_channel = 0;
 const int green_channel = 1;
 
-const Servo plow_servo = {
+const Servo arm_servo = {
     .port = 0,
 };
 
-const Motor plow_left = {
-    .port = 2,
-    .speed = 1.0,
-};
-
-const Motor plow_right = {
-    .port = 3,
-    .speed = 1.0,
+const Servo splitter_servo = {
+    .port = 1,
 };
 
 const Wheels wheels = {
@@ -39,81 +34,83 @@ const Wheels wheels = {
         .port = 1,
         .speed = 1.0,
     },
-    .left_offset = 1.25,
+    .left_offset = 0.9,
     .right_offset = 1.0,
 };
 
+/*
+
+lift arm
+
+repeat 8 times:
+    if green:
+        move servo left
+    else:
+        move servo right
+    move forward
+
+lower arm
+
+THEN: go back around to collect poms
+
+*/
+
 int main() {
-    // lower_plow();
-    collect_pom(RIGHT);
-
-    // motor(plow_left.port, 100);
-    // msleep(5000);
-    // off(plow_left.port);
-
-    return 0;
-
     camera_open();
+    raise_arm();
+    reset_splitter();
 
-    lower_plow();
-
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 5; i++) {
+        // Update multiple times to get better accuracy
         for (int i = 0; i < 10; i++) {
             camera_update();
         }
 
-        if (get_object_count(red_channel) > 0) {
+        int pom_is_red = get_object_count(red_channel) > 0;
+        int forward_distance = CM(8);
+
+        if (pom_is_red) {
             // Red pom
             printf("Red!\n"); fflush(stdout);
-            collect_pom(LEFT);
+            split_pom_right();
+            drive_wheels(wheels, FORWARD, forward_distance);
+            split_pom_left();
         } else {
             // Green pom
             printf("Green!\n"); fflush(stdout);
-            collect_pom(RIGHT);
+            split_pom_left();
+            drive_wheels(wheels, FORWARD, forward_distance);
+            split_pom_right();
         }
 
-        drive_wheels(wheels, FORWARD, IN(6));
+        reset_splitter();
 
-        msleep(2000); // FIXME: TEMPORARY
+        drive_wheels(wheels, FORWARD, IN(6) - forward_distance - CM(1));
+
+        // msleep(5000); // FIXME: TEMPORARY
     }
-
-    raise_plow();
 
     camera_close();
 
     return 0;
 }
 
-void collect_pom(TurnDirection direction) {
-    const double turn_amount = 30.0;
-    const double drive_amount = IN(6.0);
-
-    Motor plow_motor = plow_motor_for_direction(direction);
-
-    // Turn to collect the poms
-    motor(plow_motor.port, 100);
-    turn_wheels(wheels, direction, turn_amount);
-    drive_wheels(wheels, FORWARD, drive_amount);
-
-    // Get back on track
-    drive_wheels(wheels, REVERSE, drive_amount);
-    off(plow_motor.port);
-    turn_wheels(wheels, !direction, turn_amount);
+void raise_arm() {
+    set_servo(arm_servo, 1040);
 }
 
-void raise_plow() {
-    set_servo(plow_servo, 750);
+void lower_arm() {
+    set_servo(arm_servo, 1250);
 }
 
-void lower_plow() {
-    set_servo(plow_servo, 1000);
+void reset_splitter() {
+    set_servo(splitter_servo, 1280);
 }
 
-Motor plow_motor_for_direction(TurnDirection direction) {
-    switch (direction) {
-    case LEFT:
-        return plow_right;
-    default:
-        return plow_left;
-    }
+void split_pom_left() {
+    set_servo(splitter_servo, 0);
+}
+
+void split_pom_right() {
+    set_servo(splitter_servo, 2047);
 }
