@@ -34,7 +34,7 @@ Duration motor_block_duration(double cm, int velocity) {
 
 void drive_wheels(Wheels wheels, DriveDirection direction, double cm) {
     int left_velocity = calculate_velocity(wheels.left_motor.speed, direction, wheels.left_offset);
-    int right_velocity = calculate_velocity(wheels.left_motor.speed, direction, wheels.left_offset);
+    int right_velocity = calculate_velocity(wheels.right_motor.speed, direction, wheels.right_offset);
 
     int slower_velocity = left_velocity < right_velocity ? left_velocity : right_velocity;
     int sleep_time = motor_block_duration(cm, slower_velocity);
@@ -69,7 +69,10 @@ void drive_in_unison(Wheels wheels, int left_velocity, int right_velocity, Durat
 
     msleep(sleep_time);
 
-    // See force_stop_motor
+    force_stop_wheels(wheels);
+}
+
+void force_stop_wheels(Wheels wheels) {
     move_at_velocity(wheels.left_motor.port, 0);
     move_at_velocity(wheels.right_motor.port, 0);
     msleep(50);

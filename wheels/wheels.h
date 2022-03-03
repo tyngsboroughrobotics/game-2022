@@ -47,6 +47,8 @@ void turn_wheels(Wheels wheels, TurnDirection direction, double deg);
 
 void drive_in_unison(Wheels wheels, int left_velocity, int right_velocity, Duration sleep_time);
 
+void force_stop_wheels(Wheels wheels);
+
 int calculate_velocity(double speed, DriveDirection direction, double offset);
 
 double wheels_turn_amount(double degrees);
