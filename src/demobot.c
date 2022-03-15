@@ -13,7 +13,7 @@ void lower_arm();
 void reset_splitter();
 void split_pom_left();
 void split_pom_right();
-void drive_until_centered(int channel);
+void drive_until_reached_pom();
 
 const int red_channel = 0;
 const int green_channel = 1;
@@ -73,32 +73,24 @@ int main() {
     int initial_position_right = get_motor_position_counter(wheels.right_motor.port);
 
     for (int i = 0; i < 5; i++) {
-        // Update multiple times to get better accuracy
-        for (int i = 0; i < 10; i++) {
-            camera_update();
-        }
+        drive_until_reached_pom();
 
         int pom_is_red = get_object_count(red_channel) > 0;
+        int advance_distance = CM(10);
 
         if (pom_is_red) {
-            // Red pom
             printf("Red!\n"); fflush(stdout);
             split_pom_right();
-            drive_until_centered(red_channel);
+            drive_wheels(wheels, FORWARD, advance_distance);
             split_pom_left();
         } else {
-            // Green pom
             printf("Green!\n"); fflush(stdout);
             split_pom_left();
-            drive_until_centered(green_channel);
+            drive_wheels(wheels, FORWARD, advance_distance);
             split_pom_right();
         }
 
         reset_splitter();
-
-        drive_wheels(wheels, FORWARD, space_between_poms);
-
-        // msleep(5000); // FIXME: TEMPORARY
     }
 
     msleep(2000); // FIXME: TEMPORARY
@@ -117,7 +109,7 @@ int main() {
     drive_wheels(wheels, REVERSE, distance - CM(15));
 
     turn_wheels(wheels, LEFT, 120);
-    drive_wheels(wheels, FORWARD, CM(22));
+    drive_wheels(wheels, FORWARD, CM(18));
     turn_wheels(wheels, RIGHT, 120);
 
     lower_arm();
@@ -151,9 +143,10 @@ void split_pom_right() {
     set_servo(splitter_servo, 2047);
 }
 
-void drive_until_centered(int channel) {
-    int threshold = 10;
-    int center_y = get_camera_height() / 2;
+void drive_until_reached_pom() {
+    for (int i = 0; i < 10; i++) {
+        camera_update();
+    }
 
     int left_velocity = calculate_velocity(wheels.left_motor.speed, FORWARD, wheels.left_offset);
     int right_velocity = calculate_velocity(wheels.right_motor.speed, FORWARD, wheels.right_offset);
@@ -161,16 +154,13 @@ void drive_until_centered(int channel) {
     move_at_velocity(wheels.left_motor.port, left_velocity);
     move_at_velocity(wheels.right_motor.port, right_velocity);
 
-    int y = 0;
-    do {
+    while (1) {
         camera_update();
 
-        if (get_object_count(channel) > 0) {
-            y = get_object_center_y(channel, 0);
-        } else {
+        if (get_object_count(red_channel) > 0 || get_object_count(green_channel) > 0) {
             break;
         }
-    } while (abs(y - center_y) > threshold);
+    }
 
     force_stop_wheels(wheels);
 }
