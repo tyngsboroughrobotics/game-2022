@@ -27,7 +27,11 @@ sshpass -p $PASSWORD ssh $USER "
     unzip -q game.zip -d .
     rm game.zip
     mkdir -p bin
-    gcc -o bin/botball_user_program -std=c11 -lwallaby -lpthread -lm -Iwheels -Wall -g src/$1.c wheels/*.c
+    cat <<EOF > bin/botball_user_program
+#!/bin/bash
+/usr/bin/python3 $PROJECT_PATH/src/main.py $1
+EOF
+    chmod +x ./bin/botball_user_program
     echo '==> Running...'
     ./bin/botball_user_program
 "
