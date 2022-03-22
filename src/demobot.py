@@ -23,19 +23,6 @@ class Color(Enum):
     red = 0
     green = 1
 
-# lift arm
-#
-# repeat 8 times:
-#     if green:
-#         move servo left
-#     else:
-#         move servo right
-#     move forward
-#
-# lower arm
-#
-# THEN: go back around to collect poms
-
 def main():
     libwallaby.camera_open()
     raise_arm()
@@ -60,10 +47,10 @@ def main():
     print("COLORS:", colors)
 
 def raise_arm():
-    arm_servo.set(1260)
+    arm_servo.set(370)
 
 def lower_arm():
-    arm_servo.set(1380)
+    arm_servo.set(550)
 
 def collect_pom():
     for _ in range(10):
