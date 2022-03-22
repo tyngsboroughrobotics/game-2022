@@ -88,6 +88,7 @@ def collect_pom():
     wheels.drive(Direction.forward, cm(10))
 
     # Keep trying to pull in the pom pom until it's secured in the shaft
+    color = None
     while True:
         libwallaby.camera_update()
 
@@ -95,7 +96,7 @@ def collect_pom():
             color = Color.red
         elif libwallaby.get_object_count(green_channel) > 0:
             color = Color.green
-        else:
+        elif color:
             break
 
     libwallaby.off(spinner_motor.port)
