@@ -13,7 +13,7 @@ spinner_motor = Motor(port=2, speed=1)
 wheels = Wheels(
     left_motor=Motor(port=0, speed=1),
     right_motor=Motor(port=1, speed=1),
-    left_offset=0.9975, # if <1, veers to the right
+    left_offset=0.95, # if <1, veers to the right
     right_offset=1.0 # if <1, veers to the left
 )
 
