@@ -1,5 +1,8 @@
-from .libwallaby import libwallaby
 from enum import Enum
+import math
+import sys
+
+from .libwallaby import libwallaby
 
 motor_pwm_ticks = 1500
 motor_travel_time_1_cm = 0.0625
@@ -130,10 +133,20 @@ def wheels_turn_amount(degrees):
     return degrees * multiplier / 10
 
 class Servo:
-    def __init__(self, port):
+    def __init__(self, port, delay):
         self.port = port
+        self.delay = delay
 
-    def set(self, position):
+    def set(self, target_position):
+        assert self.delay > 0
+
         libwallaby.enable_servos()
-        libwallaby.set_servo_position(self.port, position)
-        libwallaby.msleep(750)
+
+        position = libwallaby.get_servo_position(self.port)
+        sign = int(math.copysign(1, target_position - position))
+        increment = 5 * sign
+
+        while abs(position - target_position) >= 5:
+            position += increment
+            libwallaby.set_servo_position(self.port, position)
+            libwallaby.msleep(self.delay)

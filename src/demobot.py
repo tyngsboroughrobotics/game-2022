@@ -1,5 +1,4 @@
 import time
-import sys
 
 from lib.libwallaby import libwallaby
 from lib.wheels import *
@@ -7,8 +6,7 @@ from lib.wheels import *
 red_channel = 0
 green_channel = 1
 
-arm_servo = Servo(port=0)
-splitter_servo = Servo(port=1)
+arm_servo = Servo(port=0, delay=20)
 
 spinner_motor = Motor(port=2, speed=1)
 
@@ -25,7 +23,6 @@ class Color(Enum):
 
 def main():
     libwallaby.camera_open()
-    raise_arm()
 
     # TODO: Get in position
 
@@ -42,7 +39,7 @@ def main():
 
         raise_arm()
 
-    with_reset_wheels(collect_poms, padding=cm(15))
+    with_reset_wheels(collect_poms, padding=cm(5))
 
     print("COLORS:", colors)
 
@@ -50,7 +47,7 @@ def raise_arm():
     arm_servo.set(370)
 
 def lower_arm():
-    arm_servo.set(550)
+    arm_servo.set(540)
 
 def collect_pom():
     for _ in range(10):
@@ -64,10 +61,13 @@ def collect_pom():
 
     libwallaby.motor(spinner_motor.port, 100)
 
+    timeout = 3
+
+    start = time.time()
     while True:
         libwallaby.camera_update()
 
-        if libwallaby.get_object_count(red_channel) > 0 or libwallaby.get_object_count(green_channel) > 0:
+        if libwallaby.get_object_count(red_channel) > 0 or libwallaby.get_object_count(green_channel) > 0 or time.time() - start > timeout:
             break
 
     wheels.force_stop()
@@ -76,6 +76,7 @@ def collect_pom():
 
     # Keep trying to pull in the pom pom until it's secured in the shaft
     color = None
+    start = time.time()
     while True:
         libwallaby.camera_update()
 
@@ -83,7 +84,7 @@ def collect_pom():
             color = Color.red
         elif libwallaby.get_object_count(green_channel) > 0:
             color = Color.green
-        elif color:
+        elif color or time.time() - start > timeout:
             break
 
     libwallaby.off(spinner_motor.port)
