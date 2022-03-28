@@ -7,17 +7,22 @@ from .libwallaby import libwallaby
 motor_pwm_ticks = 1500
 motor_travel_time_1_cm = 0.0625
 
+
 def m(x):
-    return x / 100
+    return x * 100
+
 
 def cm(x):
     return x
 
+
 def mm(x):
-    return x * 10
+    return x / 10
+
 
 def inches(x):
     return x * 2.54
+
 
 class Direction(Enum):
     forward = 0
@@ -26,6 +31,7 @@ class Direction(Enum):
     def toggle(self):
         return Direction.reverse if self == Direction.forward else Direction.forward
 
+
 class TurnDirection(Enum):
     left = 0
     right = 1
@@ -33,8 +39,10 @@ class TurnDirection(Enum):
     def toggle(self):
         return TurnDirection.right if self == TurnDirection.left else TurnDirection.left
 
+
 def scale(n, in_min, in_max, out_min, out_max):
     return (n - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
 
 class Motor:
     def __init__(self, port, speed):
@@ -57,24 +65,32 @@ class Motor:
 
     def force_stop(self):
         libwallaby.move_at_velocity(self.port, 0)
-        libwallaby.msleep(50);
+        libwallaby.msleep(50)
         libwallaby.off(self.port)
+
 
 def motor_block_duration(cm, velocity):
     return int(abs(motor_pwm_ticks * motor_travel_time_1_cm * cm / velocity) * 1000)
 
+
 class Wheels:
-    def __init__(self, left_motor, right_motor, left_offset = 1, right_offset = 1):
+    def __init__(self, left_motor, right_motor, left_offset=1, right_offset=1):
         self.left_motor = left_motor
         self.right_motor = right_motor
         self.left_offset = left_offset
         self.right_offset = right_offset
 
     def drive(self, direction, cm):
-        left_velocity = calculate_velocity(self.left_motor.speed, direction, self.left_offset)
-        right_velocity = calculate_velocity(self.right_motor.speed, direction, self.right_offset)
+        left_velocity = calculate_velocity(
+            self.left_motor.speed, direction, self.left_offset
+        )
+        right_velocity = calculate_velocity(
+            self.right_motor.speed, direction, self.right_offset
+        )
 
-        slower_velocity = left_velocity if left_velocity < right_velocity else right_velocity
+        slower_velocity = (
+            left_velocity if left_velocity < right_velocity else right_velocity
+        )
         sleep_time = motor_block_duration(cm, slower_velocity)
 
         self.drive_in_unison(left_velocity, right_velocity, sleep_time)
@@ -87,8 +103,12 @@ class Wheels:
             left_direction = Direction.forward
             right_direction = Direction.reverse
 
-        left_velocity = calculate_velocity(self.left_motor.speed, left_direction, self.left_offset)
-        right_velocity = calculate_velocity(self.right_motor.speed, right_direction, self.right_offset)
+        left_velocity = calculate_velocity(
+            self.left_motor.speed, left_direction, self.left_offset
+        )
+        right_velocity = calculate_velocity(
+            self.right_motor.speed, right_direction, self.right_offset
+        )
 
         cm = wheels_turn_amount(deg)
         sleep_time = motor_block_duration(cm, left_velocity)
@@ -106,9 +126,10 @@ class Wheels:
     def force_stop(self):
         libwallaby.move_at_velocity(self.left_motor.port, 0)
         libwallaby.move_at_velocity(self.right_motor.port, 0)
-        libwallaby.msleep(50);
+        libwallaby.msleep(50)
         libwallaby.off(self.left_motor.port)
         libwallaby.off(self.right_motor.port)
+
 
 def calculate_velocity(speed, direction, offset):
     velocity = int(speed * motor_pwm_ticks * offset)
@@ -117,6 +138,7 @@ def calculate_velocity(speed, direction, offset):
         velocity *= -1
 
     return velocity
+
 
 def wheels_turn_amount(degrees):
     if degrees == 45:
@@ -128,9 +150,14 @@ def wheels_turn_amount(degrees):
     elif degrees == 360:
         multiplier == 1.425
     else:
-        multiplier =  -2.781096509 * 10.0 ** -6.0 * degrees ** 2.0 + 1.922759857 * 10.0 ** -3.0 * degrees + 1.093333333
+        multiplier = (
+            -2.781096509 * 10.0**-6.0 * degrees**2.0
+            + 1.922759857 * 10.0**-3.0 * degrees
+            + 1.093333333
+        )
 
     return degrees * multiplier / 10
+
 
 class Servo:
     def __init__(self, port, delay):
