@@ -26,7 +26,17 @@ class Color(Enum):
 def main():
     libwallaby.camera_open()
 
-    # dispense_poms([Color.green, Color.red, Color.green])
+    dispense_poms([Color.red, Color.green, Color.green])
+    return
+
+    # lower_arm()
+    # colors = []
+    # for _ in range(3):
+    #     color = collect_pom(drive_forward_between_poms=False)
+    #     if color:
+    #         colors.append(color)
+    # raise_arm_halfway()
+    # dispense_poms(colors)
     # return
 
     # TODO: Get in position
@@ -41,7 +51,7 @@ def main():
         lower_arm()
 
         for _ in range(3):
-            color = collect_pom()
+            color = collect_pom(drive_forward_between_poms=True)
 
             if color:
                 colors.append(color)
@@ -60,18 +70,18 @@ def main():
 
 
 def raise_arm():
-    arm_servo.set(465)
-
-
-def lower_arm():
-    arm_servo.set(665)
+    arm_servo.set(420)
 
 
 def raise_arm_halfway():
-    arm_servo.set(565)
+    arm_servo.set(540)
 
 
-def collect_pom():
+def lower_arm():
+    arm_servo.set(660)
+
+
+def collect_pom(drive_forward_between_poms):
     for _ in range(10):
         libwallaby.camera_update()
 
@@ -88,12 +98,11 @@ def collect_pom():
     libwallaby.motor(spinner_motor.port, 100)
 
     timeout = 5
-
     run_until_poms(None, timeout=timeout)
-
     wheels.force_stop()
 
-    wheels.drive(Direction.forward, cm(10))
+    if drive_forward_between_poms:
+        wheels.drive(Direction.forward, cm(10))
 
     # Keep trying to pull in the pom pom until it's secured in the shaft
     color = None
@@ -130,18 +139,17 @@ def dispense_poms(colors):
 
         shake_angle = 3.5
 
-        def shake():
+        for _ in range(5):
             wheels.turn(TurnDirection.left, shake_angle)
             wheels.turn(TurnDirection.right, shake_angle)
 
-        run_until_poms(shake, timeout=3)
         wheels.turn(TurnDirection.left, shake_angle)
         libwallaby.msleep(500)
 
         # Dispense the pom
 
         libwallaby.motor(spinner_motor.port, -100)
-        libwallaby.msleep(500)
+        libwallaby.msleep(800)
         libwallaby.off(spinner_motor.port)
         libwallaby.msleep(100)
 
