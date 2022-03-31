@@ -13,7 +13,7 @@ spinner_motor = Motor(port=2, speed=1)
 wheels = Wheels(
     left_motor=Motor(port=0, speed=1),
     right_motor=Motor(port=1, speed=1),
-    left_offset=0.975,  # if <1, veers to the right
+    left_offset=0.97,  # if <1, veers to the right
     right_offset=1.0,  # if <1, veers to the left
 )
 
@@ -26,45 +26,70 @@ class Color(Enum):
 def main():
     libwallaby.camera_open()
 
-    dispense_poms([Color.red, Color.green, Color.green])
-    return
-
-    # lower_arm()
-    # colors = []
-    # for _ in range(3):
-    #     color = collect_pom(drive_forward_between_poms=False)
-    #     if color:
-    #         colors.append(color)
-    # raise_arm_halfway()
-    # dispense_poms(colors)
+    # wheels.drive(Direction.forward, cm(50))
     # return
 
-    # TODO: Get in position
+    # dispense_poms([Color.red, Color.green, Color.green])
+    # return
+
+    # Collect the first three poms
+
+    colors = []
+
+    for angle in [0, 35, 55]:
+        wheels.turn(TurnDirection.right, angle)
+
+        lower_arm()
+
+        color = with_reset_wheels(collect_pom)
+
+        if color:
+            colors.append(color)
+
+        raise_arm()
+
+        wheels.turn(TurnDirection.left, angle)
+
+    # Turn in increments to avoid hitting the wall
+    wheels.turn(TurnDirection.right, 35)
+    wheels.drive(Direction.forward, cm(5))
+    wheels.turn(TurnDirection.right, 70)
+
+    # Drive to and line up with the sorter
+    wheels.drive(Direction.forward, m(1.5))
+    wheels.turn(TurnDirection.left, 90)
+    wheels.drive(Direction.forward, cm(18))
+    wheels.turn(TurnDirection.right, 95)  # not exactly 45 because of wheel offset
+
+    raise_arm_halfway()
+    wheels.drive(Direction.forward, cm(10))
+    dispense_poms(colors)
+
+    return
+
+    # Collect the next three poms
 
     colors = []
 
     def collect_poms():
-        # The offset is more noticeable because the wheels stop and start
-        # frequently
-        prev_offset = wheels.left_offset
-        wheels.left_offset -= 0.04
         lower_arm()
 
         for _ in range(3):
-            color = collect_pom(drive_forward_between_poms=True)
+            color = collect_pom()
 
             if color:
                 colors.append(color)
 
         raise_arm()
-        wheels.left_offset = prev_offset
 
-    distance_traveled_collecting_poms = get_wheel_distance_after(collect_poms)
+    _, distance_traveled_collecting_poms = get_wheel_distance_after(collect_poms)
 
     raise_arm()
     wheels.drive(Direction.forward, m(1.6) - distance_traveled_collecting_poms)
 
     print("COLORS:", colors)
+
+    return
 
     dispense_poms(colors)
 
@@ -81,7 +106,7 @@ def lower_arm():
     arm_servo.set(660)
 
 
-def collect_pom(drive_forward_between_poms):
+def collect_pom():
     for _ in range(10):
         libwallaby.camera_update()
 
@@ -101,8 +126,7 @@ def collect_pom(drive_forward_between_poms):
     run_until_poms(None, timeout=timeout)
     wheels.force_stop()
 
-    if drive_forward_between_poms:
-        wheels.drive(Direction.forward, cm(10))
+    wheels.drive(Direction.forward, cm(10))
 
     # Keep trying to pull in the pom pom until it's secured in the shaft
     color = None
@@ -189,7 +213,9 @@ def run_until_no_poms(f, timeout):
 
 
 def with_reset_wheels(f, direction=Direction.reverse, padding=0):
-    wheels.drive(direction, get_wheel_distance_after(f) - padding)
+    value, distance = get_wheel_distance_after(f)
+    wheels.drive(direction, distance - padding)
+    return value
 
 
 def get_wheel_distance_after(f):
@@ -200,7 +226,7 @@ def get_wheel_distance_after(f):
         wheels.right_motor.port
     )
 
-    f()
+    value = f()
 
     final_position_left = libwallaby.get_motor_position_counter(wheels.left_motor.port)
     final_position_right = libwallaby.get_motor_position_counter(
@@ -210,7 +236,7 @@ def get_wheel_distance_after(f):
     left_distance = final_position_left - initial_position_left
     right_distance = final_position_right - initial_position_right
 
-    return (
+    return value, (
         (left_distance if left_distance < right_distance else right_distance)
         / motor_pwm_ticks
         / motor_travel_time_1_cm

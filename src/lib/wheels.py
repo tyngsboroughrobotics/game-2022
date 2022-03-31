@@ -97,11 +97,11 @@ class Wheels:
 
     def turn(self, direction, deg):
         if direction == TurnDirection.left:
-            left_direction = Direction.reverse
-            right_direction = Direction.forward
-        else:
             left_direction = Direction.forward
             right_direction = Direction.reverse
+        else:
+            left_direction = Direction.reverse
+            right_direction = Direction.forward
 
         left_velocity = calculate_velocity(
             self.left_motor.speed, left_direction, self.left_offset
