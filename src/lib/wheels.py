@@ -121,9 +121,21 @@ class Wheels:
 
         libwallaby.msleep(sleep_time)
 
-        self.force_stop()
+        self.stop()
 
-    def force_stop(self):
+    def start(self, direction):
+        left_velocity = calculate_velocity(
+            self.left_motor.speed, direction, self.left_offset
+        )
+
+        right_velocity = calculate_velocity(
+            self.right_motor.speed, direction, self.right_offset
+        )
+
+        libwallaby.move_at_velocity(self.left_motor.port, left_velocity)
+        libwallaby.move_at_velocity(self.right_motor.port, right_velocity)
+
+    def stop(self):
         libwallaby.move_at_velocity(self.left_motor.port, 0)
         libwallaby.move_at_velocity(self.right_motor.port, 0)
         libwallaby.msleep(50)

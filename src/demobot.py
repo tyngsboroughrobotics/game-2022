@@ -32,11 +32,17 @@ def main():
     # dispense_poms([Color.red, Color.green, Color.green])
     # return
 
+    # Collect the first group of poms
+
+    # collect_group()
+    # return
+
     # Collect the first three poms
 
+    """
     colors = []
 
-    for angle in [0, 35, 55]:
+    for angle in [0, 35]:
         wheels.turn(TurnDirection.right, angle)
 
         lower_arm()
@@ -66,32 +72,25 @@ def main():
     dispense_poms(colors)
 
     return
+    """
 
     # Collect the next three poms
 
     colors = []
 
     def collect_poms():
-        lower_arm()
-
         for _ in range(3):
             color = collect_pom()
-
             if color:
                 colors.append(color)
 
-        raise_arm()
-
     _, distance_traveled_collecting_poms = get_wheel_distance_after(collect_poms)
 
-    raise_arm()
-    wheels.drive(Direction.forward, m(1.6) - distance_traveled_collecting_poms)
+    # wheels.drive(Direction.forward, m(1.6) - distance_traveled_collecting_poms)
 
     print("COLORS:", colors)
 
-    return
-
-    dispense_poms(colors)
+    # dispense_poms(colors)
 
 
 def raise_arm():
@@ -103,47 +102,55 @@ def raise_arm_halfway():
 
 
 def lower_arm():
-    arm_servo.set(660)
+    arm_servo.set(670)
+
+
+def collect_group():
+    colors = []
+
+    lower_arm()
+
+    color = with_reset_wheels(collect_pom)
+    if color:
+        colors.append(color)
+
+    wheels.turn(TurnDirection.right, 90)
+    wheels.drive(Direction.forward, cm(10))
+    wheels.turn(TurnDirection.left, 90)
+
+    def collect_2():
+        for _ in range(2):
+            color = collect_pom()
+            if color:
+                colors.append(color)
+
+    with_reset_wheels(collect_2)
 
 
 def collect_pom():
+    raise_arm()
+
+    wheels.start(Direction.forward)
+    while not pom_detected():
+        pass
+    wheels.stop()
+
+    lower_arm()
+    libwallaby.motor(spinner_motor.port, 100)
+    wheels.left_motor.speed = wheels.right_motor.speed = 0.5
+    wheels.drive(Direction.forward, inches(2))
+    wheels.left_motor.speed = wheels.right_motor.speed = 1
+
+    libwallaby.msleep(1000)
+    libwallaby.off(spinner_motor.port)
+
     for _ in range(10):
         libwallaby.camera_update()
 
-    left_velocity = calculate_velocity(
-        wheels.left_motor.speed, Direction.forward, wheels.left_offset
-    )
-    right_velocity = calculate_velocity(
-        wheels.right_motor.speed, Direction.forward, wheels.right_offset
-    )
-
-    libwallaby.move_at_velocity(wheels.left_motor.port, left_velocity)
-    libwallaby.move_at_velocity(wheels.right_motor.port, right_velocity)
-
-    libwallaby.motor(spinner_motor.port, 100)
-
-    timeout = 5
-    run_until_poms(None, timeout=timeout)
-    wheels.force_stop()
-
-    wheels.drive(Direction.forward, cm(10))
-
-    # Keep trying to pull in the pom pom until it's secured in the shaft
-    color = None
-    start = time.time()
-    while time.time() - start <= timeout:
-        libwallaby.camera_update()
-
-        if libwallaby.get_object_count(red_channel) > 0:
-            color = Color.red
-        elif libwallaby.get_object_count(green_channel) > 0:
-            color = Color.green
-        elif color:
-            break
-
-    libwallaby.off(spinner_motor.port)
-
-    return color
+    if libwallaby.get_object_count(red_channel) > 0:
+        return Color.red
+    elif libwallaby.get_object_count(green_channel) > 0:
+        return Color.green
 
 
 def dispense_poms(colors):
@@ -161,7 +168,7 @@ def dispense_poms(colors):
 
         # Give the poms a shake so the pom at the front rolls down into place
 
-        shake_angle = 3.5
+        shake_angle = 5
 
         for _ in range(5):
             wheels.turn(TurnDirection.left, shake_angle)
@@ -182,33 +189,29 @@ def dispense_poms(colors):
         wheels.turn(direction.toggle(), angle)
 
 
+def pom_detected():
+    print(libwallaby.analog(0))
+    sys.stdout.flush()
+    return libwallaby.analog(0) >= 1800
+
+
 def run_until_poms(f, timeout):
     start = time.time()
     while time.time() - start <= timeout:
-        libwallaby.camera_update()
-
         if f:
             f()
 
-        if (
-            libwallaby.get_object_count(red_channel) > 0
-            or libwallaby.get_object_count(green_channel) > 0
-        ):
+        if pom_detected():
             break
 
 
 def run_until_no_poms(f, timeout):
     start = time.time()
     while time.time() - start <= timeout:
-        libwallaby.camera_update()
-
         if f:
             f()
 
-        if (
-            libwallaby.get_object_count(red_channel) == 0
-            and libwallaby.get_object_count(green_channel) == 0
-        ):
+        if not pom_detected():
             break
 
 
