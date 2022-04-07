@@ -139,6 +139,8 @@ def collect_pom():
         pass
     wheels.stop()
 
+    color = detect_color()
+
     lower_arm()
 
     spinner_motor.start(Direction.forward)
@@ -146,7 +148,7 @@ def collect_pom():
     libwallaby.msleep(500)
     spinner_motor.stop()
 
-    return detect_color()
+    return color
 
 
 def detect_color():
@@ -213,7 +215,7 @@ def shake():
 def pom_detected():
     print(libwallaby.analog(0))
     sys.stdout.flush()
-    return libwallaby.analog(0) >= 1600
+    return libwallaby.analog(0) >= 1650
 
 
 def run_until_poms(f, timeout):
