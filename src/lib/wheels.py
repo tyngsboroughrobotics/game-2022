@@ -50,7 +50,7 @@ class Motor:
         self.speed = speed
 
     def drive(self, direction, cm):
-        velocity = self.speed * motor_pwm_ticks
+        velocity = int(self.speed * motor_pwm_ticks)
 
         if direction == Direction.reverse:
             velocity *= -1
@@ -61,9 +61,17 @@ class Motor:
 
         libwallaby.msleep(int(block_duration))
 
-        self.force_stop()
+        self.stop()
 
-    def force_stop(self):
+    def start(self, direction):
+        velocity = int(self.speed * motor_pwm_ticks)
+
+        if direction == Direction.reverse:
+            velocity *= -1
+
+        libwallaby.move_at_velocity(self.port, velocity)
+
+    def stop(self):
         libwallaby.move_at_velocity(self.port, 0)
         libwallaby.msleep(50)
         libwallaby.off(self.port)

@@ -26,6 +26,13 @@ class Color(Enum):
 def main():
     libwallaby.camera_open()
 
+    # for _ in range(4):
+    #     spin_once(Direction.forward)
+    # libwallaby.msleep(1000)
+    # for _ in range(4):
+    #     spin_once(Direction.reverse)
+    # return
+
     # wheels.drive(Direction.forward, cm(50))
     # return
 
@@ -64,11 +71,11 @@ def main():
     # Drive to and line up with the sorter
     wheels.drive(Direction.forward, m(1.5))
     wheels.turn(TurnDirection.left, 90)
-    wheels.drive(Direction.forward, cm(18))
+    wheels.drive(Direction.forward, cm(25))
     wheels.turn(TurnDirection.right, 95)  # not exactly 45 because of wheel offset
 
     raise_arm_halfway()
-    wheels.drive(Direction.forward, cm(10))
+    wheels.drive(Direction.forward, cm(5))
     dispense_poms(colors)
 
     return
@@ -85,11 +92,8 @@ def main():
                 colors.append(color)
 
     _, distance_traveled_collecting_poms = get_wheel_distance_after(collect_poms)
-
     # wheels.drive(Direction.forward, m(1.6) - distance_traveled_collecting_poms)
-
     print("COLORS:", colors)
-
     # dispense_poms(colors)
 
 
@@ -102,7 +106,7 @@ def raise_arm_halfway():
 
 
 def lower_arm():
-    arm_servo.set(670)
+    arm_servo.set(700)
 
 
 def collect_group():
@@ -136,21 +140,38 @@ def collect_pom():
     wheels.stop()
 
     lower_arm()
-    libwallaby.motor(spinner_motor.port, 100)
-    wheels.left_motor.speed = wheels.right_motor.speed = 0.5
-    wheels.drive(Direction.forward, inches(2))
-    wheels.left_motor.speed = wheels.right_motor.speed = 1
 
-    libwallaby.msleep(1000)
-    libwallaby.off(spinner_motor.port)
+    spinner_motor.start(Direction.forward)
+    wheels.drive(Direction.forward, cm(10))
+    libwallaby.msleep(500)
+    spinner_motor.stop()
 
+    return detect_color()
+
+
+def detect_color():
     for _ in range(10):
         libwallaby.camera_update()
 
-    if libwallaby.get_object_count(red_channel) > 0:
+    red_area = total_area_of_color(red_channel)
+    green_area = total_area_of_color(green_channel)
+
+    if red_area > green_area:
         return Color.red
-    elif libwallaby.get_object_count(green_channel) > 0:
+    elif green_area > red_area:
         return Color.green
+    else:
+        return None
+
+
+def total_area_of_color(channel):
+    object_count = libwallaby.get_object_count(channel)
+    area = 0
+
+    for object in range(object_count):
+        area += libwallaby.get_object_area(channel, object)
+
+    return area
 
 
 def dispense_poms(colors):
@@ -166,22 +187,14 @@ def dispense_poms(colors):
 
         wheels.turn(direction, angle)
 
-        # Give the poms a shake so the pom at the front rolls down into place
-
-        shake_angle = 5
-
-        for _ in range(5):
-            wheels.turn(TurnDirection.left, shake_angle)
-            wheels.turn(TurnDirection.right, shake_angle)
-
-        wheels.turn(TurnDirection.left, shake_angle)
+        shake()
         libwallaby.msleep(500)
 
         # Dispense the pom
 
-        libwallaby.motor(spinner_motor.port, -100)
+        spinner_motor.start(Direction.reverse)
         libwallaby.msleep(800)
-        libwallaby.off(spinner_motor.port)
+        spinner_motor.stop()
         libwallaby.msleep(100)
 
         # Reset position
@@ -189,10 +202,18 @@ def dispense_poms(colors):
         wheels.turn(direction.toggle(), angle)
 
 
+def shake():
+    shake_angle = 5
+
+    for _ in range(5):
+        wheels.turn(TurnDirection.left, shake_angle)
+        wheels.turn(TurnDirection.right, shake_angle)
+
+
 def pom_detected():
     print(libwallaby.analog(0))
     sys.stdout.flush()
-    return libwallaby.analog(0) >= 1800
+    return libwallaby.analog(0) >= 1600
 
 
 def run_until_poms(f, timeout):
