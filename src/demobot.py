@@ -145,7 +145,7 @@ def collect_pom():
 
     spinner_motor.start(Direction.forward)
     wheels.drive(Direction.forward, cm(10))
-    libwallaby.msleep(500)
+    libwallaby.msleep(1000)
     spinner_motor.stop()
 
     return color
@@ -213,8 +213,6 @@ def shake():
 
 
 def pom_detected():
-    print(libwallaby.analog(0))
-    sys.stdout.flush()
     return libwallaby.analog(0) >= 1650
 
 
