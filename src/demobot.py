@@ -24,7 +24,10 @@ class Color(Enum):
 
 
 def main():
+    libwallaby.camera_close()
     libwallaby.camera_open()
+
+    raise_arm_halfway()
 
     # for _ in range(4):
     #     spin_once(Direction.forward)
@@ -44,7 +47,7 @@ def main():
     # collect_group()
     # return
 
-    # Collect the first three poms
+    # Collect the first two poms
 
     """
     colors = []
@@ -66,20 +69,22 @@ def main():
     # Turn in increments to avoid hitting the wall
     wheels.turn(TurnDirection.right, 35)
     wheels.drive(Direction.forward, cm(5))
-    wheels.turn(TurnDirection.right, 70)
+    wheels.turn(TurnDirection.right, 55)
 
     # Drive to and line up with the sorter
     wheels.drive(Direction.forward, m(1.5))
     wheels.turn(TurnDirection.left, 90)
-    wheels.drive(Direction.forward, cm(25))
+    wheels.drive(Direction.forward, cm(28))
     wheels.turn(TurnDirection.right, 95)  # not exactly 45 because of wheel offset
 
     raise_arm_halfway()
     wheels.drive(Direction.forward, cm(5))
     dispense_poms(colors)
+    """
+
+    dispense_poms([Color.red, Color.green, Color.red])
 
     return
-    """
 
     # Collect the next three poms
 
@@ -92,9 +97,12 @@ def main():
                 colors.append(color)
 
     _, distance_traveled_collecting_poms = get_wheel_distance_after(collect_poms)
-    # wheels.drive(Direction.forward, m(1.6) - distance_traveled_collecting_poms)
+
     print("COLORS:", colors)
-    # dispense_poms(colors)
+
+    raise_arm()
+    wheels.drive(Direction.forward, m(1.5) - distance_traveled_collecting_poms)
+    dispense_poms(colors)
 
 
 def raise_arm():
@@ -102,7 +110,7 @@ def raise_arm():
 
 
 def raise_arm_halfway():
-    arm_servo.set(540)
+    arm_servo.set(580)
 
 
 def lower_arm():
@@ -176,14 +184,26 @@ def total_area_of_color(channel):
     return area
 
 
+def wait_until_new_pom(channel):
+    prev_total_area = total_area_of_color(channel)
+
+    while True:
+        total_area = total_area_of_color(channel)
+
+        if total_area > prev_total_area + 500:
+            break
+
+
 def dispense_poms(colors):
     raise_arm_halfway()
 
     for color in reversed(colors):
         if color == Color.red:
             direction = TurnDirection.left
+            channel = red_channel
         else:
             direction = TurnDirection.right
+            channel = green_channel
 
         angle = 30
 
@@ -195,7 +215,7 @@ def dispense_poms(colors):
         # Dispense the pom
 
         spinner_motor.start(Direction.reverse)
-        libwallaby.msleep(800)
+        wait_until_new_pom(channel)
         spinner_motor.stop()
         libwallaby.msleep(100)
 
