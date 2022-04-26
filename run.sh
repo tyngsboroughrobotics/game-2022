@@ -28,7 +28,7 @@ sshpass -p $PASSWORD ssh $USER "
     rm game.zip
     mkdir -p bin
     cat <<EOF > bin/botball_user_program
-#!/bin/bash
+#!/bin/bash -e
 /usr/bin/python3 $PROJECT_PATH/src/main.py $1
 EOF
     chmod +x ./bin/botball_user_program

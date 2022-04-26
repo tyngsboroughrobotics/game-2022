@@ -24,32 +24,53 @@ class Color(Enum):
 
 
 def main():
-    libwallaby.camera_close()
-    libwallaby.camera_open()
+    # libwallaby.camera_close()
+    # libwallaby.camera_open()
+    # raise_arm_halfway()
 
-    raise_arm_halfway()
+    while True:
+        wheels.drive(Direction.forward, cm(10))
+        wheels.drive(Direction.reverse, cm(10))
 
-    # for _ in range(4):
-    #     spin_once(Direction.forward)
-    # libwallaby.msleep(1000)
-    # for _ in range(4):
-    #     spin_once(Direction.reverse)
-    # return
+    # Collect the single poms
 
-    # wheels.drive(Direction.forward, cm(50))
-    # return
+    # repeat 6 times:
+    #   turn left 90°
+    #   move forward
+    #   scan for color
+    #   collect if red
+    #   back up
+    #   turn right 90°
+    #   drive forward
+    # then do the same for green
 
-    # dispense_poms([Color.red, Color.green, Color.green])
-    # return
+    # Collect only the red poms
 
-    # Collect the first group of poms
+    number_of_poms = 7
+    distance_between_poms = inches(6)
+    turn_amount = 90  # instead of 90 to counter wheel offset
 
-    # collect_group()
-    # return
+    for _ in range(number_of_poms):
+        wheels.turn(TurnDirection.left, turn_amount)
+
+        def collect():
+            pom_color = detect_pom()
+
+            if pom_color == Color.red:
+                collect_pom()
+
+        with_reset_wheels(collect)
+
+        wheels.turn(TurnDirection.right, turn_amount)
+
+        wheels.drive(Direction.forward, distance_between_poms)
+
+    # TODO: Dispense poms
+
+    return
 
     # Collect the first two poms
 
-    """
     colors = []
 
     for angle in [0, 35]:
@@ -80,11 +101,6 @@ def main():
     raise_arm_halfway()
     wheels.drive(Direction.forward, cm(5))
     dispense_poms(colors)
-    """
-
-    dispense_poms([Color.red, Color.green, Color.red])
-
-    return
 
     # Collect the next three poms
 
@@ -139,7 +155,7 @@ def collect_group():
     with_reset_wheels(collect_2)
 
 
-def collect_pom():
+def detect_pom():
     raise_arm()
 
     wheels.start(Direction.forward)
@@ -151,12 +167,14 @@ def collect_pom():
 
     lower_arm()
 
+    return color
+
+
+def collect_pom():
     spinner_motor.start(Direction.forward)
     wheels.drive(Direction.forward, cm(10))
     libwallaby.msleep(1000)
     spinner_motor.stop()
-
-    return color
 
 
 def detect_color():
@@ -233,7 +251,7 @@ def shake():
 
 
 def pom_detected():
-    return libwallaby.analog(0) >= 1650
+    return libwallaby.analog(0) >= 1700
 
 
 def run_until_poms(f, timeout):
