@@ -24,44 +24,31 @@ class Color(Enum):
 
 
 def main():
-    # libwallaby.camera_close()
-    # libwallaby.camera_open()
-    raise_arm_halfway()
-
-    while True:
-        wheels.drive(Direction.forward, cm(10))
-        wheels.drive(Direction.reverse, cm(10))
-
-    # Collect the single poms
-
-    # repeat 6 times:
-    #   turn left 90°
-    #   move forward
-    #   scan for color
-    #   collect if red
-    #   back up
-    #   turn right 90°
-    #   drive forward
-    # then do the same for green
+    libwallaby.camera_close()
+    libwallaby.camera_open()
 
     # Collect only the red poms
 
     number_of_poms = 7
-    distance_between_poms = inches(6)
-    turn_amount = 90  # instead of 90 to counter wheel offset
+    distance_between_poms = inches(5.75)
+    target_color = Color.red
 
     for _ in range(number_of_poms):
-        wheels.turn(TurnDirection.left, turn_amount)
+        wheels.turn(TurnDirection.left, 88)  # instead of 90 to counter offset
 
         def collect():
-            pom_color = detect_pom()
+            wheels.drive(Direction.forward, inches(3))
 
-            if pom_color == Color.red:
+            pom_color = detect_color()
+            print("COLOR:", pom_color, flush=True)
+            if pom_color == target_color:
+                lower_arm()
                 collect_pom()
+                raise_arm()
 
-        with_reset_wheels(collect)
+        with_reset_wheels(collect, padding=cm(1))
 
-        wheels.turn(TurnDirection.right, turn_amount)
+        wheels.turn(TurnDirection.right, 86)  # instead of 90 to counter offset
 
         wheels.drive(Direction.forward, distance_between_poms)
 
@@ -156,18 +143,12 @@ def collect_group():
 
 
 def detect_pom():
-    raise_arm()
-
     wheels.start(Direction.forward)
     while not pom_detected():
         pass
     wheels.stop()
 
-    color = detect_color()
-
-    lower_arm()
-
-    return color
+    return detect_color()
 
 
 def collect_pom():
@@ -251,7 +232,12 @@ def shake():
 
 
 def pom_detected():
-    return libwallaby.analog(0) >= 1700
+    libwallaby.camera_update()
+
+    return (
+        libwallaby.get_object_count(red_channel) > 0
+        or libwallaby.get_object_count(green_channel) > 0
+    )
 
 
 def run_until_poms(f, timeout):

@@ -4,12 +4,18 @@ import sys
 import os
 
 
+def exit():
+    libwallaby.ao()
+    libwallaby.disable_servos()
+    libwallaby.camera_close()
+    os._exit(2)
+
+
 def exit_on_enter():
-    if input() == "":
-        print("Exiting...", flush=True)
-        libwallaby.ao()
-        libwallaby.disable_servos()
-        os._exit(2)
+    print("Press Enter to exit")
+    input()
+    print("Exiting...", flush=True)
+    exit()
 
 
 if __name__ == "__main__":
@@ -17,3 +23,4 @@ if __name__ == "__main__":
     thread.start()
 
     __import__(sys.argv[1]).main()
+    exit()
