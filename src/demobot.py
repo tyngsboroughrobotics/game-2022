@@ -26,7 +26,7 @@ class Color(Enum):
 def main():
     # libwallaby.camera_close()
     # libwallaby.camera_open()
-    # raise_arm_halfway()
+    raise_arm_halfway()
 
     while True:
         wheels.drive(Direction.forward, cm(10))
