@@ -13,9 +13,12 @@ spinner_motor = Motor(port=2, speed=1)
 wheels = Wheels(
     left_motor=Motor(port=0, speed=1),
     right_motor=Motor(port=1, speed=1),
-    left_offset=0.97,  # if <1, veers to the right
+    left_offset=0.91,  # if <1, veers to the right
     right_offset=1.0,  # if <1, veers to the left
 )
+
+
+half_turn = 150  # instead of 180 to counter offset
 
 
 class Color(Enum):
@@ -27,85 +30,94 @@ def main():
     libwallaby.camera_close()
     libwallaby.camera_open()
 
+    raise_arm()
+
+    """
     # Collect only the red poms
 
     number_of_poms = 7
-    distance_between_poms = inches(5.75)
+    distance_between_poms = inches(5.25)
     target_color = Color.red
 
     for _ in range(number_of_poms):
-        wheels.turn(TurnDirection.left, 88)  # instead of 90 to counter offset
+        wheels.turn(TurnDirection.left, 86)  # instead of 90 to counter offset
 
         def collect():
-            wheels.drive(Direction.forward, inches(3))
+            wheels.start(Direction.forward)
+            run_until_poms(None, timeout=3)
+            wheels.stop()
 
-            pom_color = detect_color()
-            print("COLOR:", pom_color, flush=True)
-            if pom_color == target_color:
+            wheels.drive(Direction.forward, cm(1))
+
+            color = detect_color()
+            print("COLOR:", color, flush=True)
+
+            if color == target_color:
                 lower_arm()
                 collect_pom()
                 raise_arm()
 
-        with_reset_wheels(collect, padding=cm(1))
+        with_reset_wheels(collect)
 
-        wheels.turn(TurnDirection.right, 86)  # instead of 90 to counter offset
+        wheels.turn(TurnDirection.right, 80)  # instead of 90 to counter offset
 
         wheels.drive(Direction.forward, distance_between_poms)
 
-    # TODO: Dispense poms
+    # Wait for Create
 
-    return
+    # TODO
 
-    # Collect the first two poms
+    # Drive to the material transport
 
-    colors = []
-
-    for angle in [0, 35]:
-        wheels.turn(TurnDirection.right, angle)
-
-        lower_arm()
-
-        color = with_reset_wheels(collect_pom)
-
-        if color:
-            colors.append(color)
-
-        raise_arm()
-
-        wheels.turn(TurnDirection.left, angle)
-
-    # Turn in increments to avoid hitting the wall
-    wheels.turn(TurnDirection.right, 35)
-    wheels.drive(Direction.forward, cm(5))
-    wheels.turn(TurnDirection.right, 55)
-
-    # Drive to and line up with the sorter
-    wheels.drive(Direction.forward, m(1.5))
+    wheels.drive(Direction.forward, m(0.5))
     wheels.turn(TurnDirection.left, 90)
-    wheels.drive(Direction.forward, cm(28))
-    wheels.turn(TurnDirection.right, 95)  # not exactly 45 because of wheel offset
+    wheels.drive(Direction.forward, cm(27))
+    wheels.turn(TurnDirection.right, 90)
 
-    raise_arm_halfway()
-    wheels.drive(Direction.forward, cm(5))
-    dispense_poms(colors)
+    # Dispense the red poms
 
-    # Collect the next three poms
+    # TODO: TURN LEFT
+    dispense_poms_v2()
 
-    colors = []
+    # Turn around
 
-    def collect_poms():
-        for _ in range(3):
-            color = collect_pom()
-            if color:
-                colors.append(color)
+    wheels.turn(TurnDirection.right, half_turn)
+    wheels.drive(Direction.forward, m(0.45))
 
-    _, distance_traveled_collecting_poms = get_wheel_distance_after(collect_poms)
+    # Collect the remaining (green) poms
 
-    print("COLORS:", colors)
+    lower_arm()
+
+    spinner_motor.start(Direction.forward)
+    wheels.drive(Direction.forward, m(0.85))
+    libwallaby.msleep(500)
+    spinner_motor.stop()
 
     raise_arm()
-    wheels.drive(Direction.forward, m(1.5) - distance_traveled_collecting_poms)
-    dispense_poms(colors)
+
+    # Turn around and drive to the material transport
+
+    wheels.turn(TurnDirection.right, half_turn)
+    wheels.drive(Direction.forward, m(1.3))
+    """
+
+    # Dispense the green poms
+
+    # TODO: TURN RIGHT
+    dispense_poms_v2()
+
+    # TODO
+
+
+def dispense_poms_v2():
+    raise_arm_halfway()
+    spinner_motor.start(Direction.reverse)
+
+    for _ in range(5):
+        shake()
+
+    spinner_motor.stop()
+    raise_arm()
 
 
 def raise_arm():
@@ -113,11 +125,11 @@ def raise_arm():
 
 
 def raise_arm_halfway():
-    arm_servo.set(580)
+    arm_servo.set(620)
 
 
 def lower_arm():
-    arm_servo.set(700)
+    arm_servo.set(680)
 
 
 def collect_group():
@@ -228,7 +240,9 @@ def shake():
 
     for _ in range(5):
         wheels.turn(TurnDirection.left, shake_angle)
+        raise_arm()
         wheels.turn(TurnDirection.right, shake_angle)
+        raise_arm_halfway()
 
 
 def pom_detected():
