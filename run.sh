@@ -29,7 +29,7 @@ sshpass -p $PASSWORD ssh $USER "
     mkdir -p bin
     cat <<EOF > bin/botball_user_program
 #!/bin/bash -e
-/usr/bin/python3 $PROJECT_PATH/src/main.py $1
+/usr/bin/python3 -u $PROJECT_PATH/src/main.py $1
 EOF
     chmod +x ./bin/botball_user_program
     echo '==> Running...'

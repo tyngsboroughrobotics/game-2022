@@ -32,34 +32,40 @@ def main():
 
     raise_arm()
 
-    """
     # Collect only the red poms
 
-    number_of_poms = 7
+    number_of_poms = 8
+    number_of_red_poms = 0
     distance_between_poms = inches(5.25)
+
     target_color = Color.red
 
-    for _ in range(number_of_poms):
-        wheels.turn(TurnDirection.left, 86)  # instead of 90 to counter offset
+    for _ in range(number_of_poms - 1):  # the first pom is skipped
+        wheels.turn(TurnDirection.left, 86)
 
         def collect():
+            nonlocal number_of_red_poms
+
             wheels.start(Direction.forward)
             run_until_poms(None, timeout=3)
             wheels.stop()
 
+            align_wheels_to_pom()
+
             wheels.drive(Direction.forward, cm(1))
 
             color = detect_color()
-            print("COLOR:", color, flush=True)
+            print("COLOR:", color)
 
             if color == target_color:
                 lower_arm()
                 collect_pom()
                 raise_arm()
+                number_of_red_poms += 1
 
         with_reset_wheels(collect)
 
-        wheels.turn(TurnDirection.right, 80)  # instead of 90 to counter offset
+        wheels.turn(TurnDirection.right, 80)
 
         wheels.drive(Direction.forward, distance_between_poms)
 
@@ -70,43 +76,77 @@ def main():
     # Drive to the material transport
 
     wheels.drive(Direction.forward, m(0.5))
-    wheels.turn(TurnDirection.left, 90)
-    wheels.drive(Direction.forward, cm(27))
-    wheels.turn(TurnDirection.right, 90)
 
     # Dispense the red poms
 
-    # TODO: TURN LEFT
     dispense_poms_v2()
 
     # Turn around
 
-    wheels.turn(TurnDirection.right, half_turn)
+    wheels.turn(TurnDirection.left, 75)
+    wheels.drive(Direction.forward, cm(13))
+    wheels.turn(TurnDirection.left, 82)
     wheels.drive(Direction.forward, m(0.45))
 
     # Collect the remaining (green) poms
 
-    lower_arm()
+    number_of_green_poms = number_of_poms - number_of_red_poms
 
-    spinner_motor.start(Direction.forward)
-    wheels.drive(Direction.forward, m(0.85))
-    libwallaby.msleep(500)
-    spinner_motor.stop()
+    for _ in range(number_of_green_poms):
+        wheels.start(Direction.forward)
+        run_until_poms(None, timeout=5)
+        wheels.stop()
 
-    raise_arm()
+        align_wheels_to_pom()
+
+        wheels.drive(Direction.forward, cm(2))
+
+        lower_arm()
+        collect_pom()
+        raise_arm()
 
     # Turn around and drive to the material transport
 
     wheels.turn(TurnDirection.right, half_turn)
     wheels.drive(Direction.forward, m(1.3))
-    """
 
     # Dispense the green poms
 
-    # TODO: TURN RIGHT
+    wheels.turn(TurnDirection.left, 30)
     dispense_poms_v2()
 
     # TODO
+
+
+def align_wheels_to_pom():
+    color = detect_color()
+    if color is None:
+        return
+    channel = channel_of(color)
+
+    if libwallaby.get_object_count(channel) == 0:
+        return
+
+    center_x = libwallaby.get_camera_width() / 2
+    threshold = 5
+
+    wheels.left_motor.speed = 0.1
+    wheels.right_motor.speed = 0.1
+
+    while True:
+        libwallaby.camera_update()
+
+        diff = libwallaby.get_object_center_x(channel, 0) - center_x
+
+        if diff < -threshold:
+            wheels.start_turn(TurnDirection.left)
+        elif diff > threshold:
+            wheels.start_turn(TurnDirection.right)
+        else:
+            wheels.stop()
+            wheels.left_motor.speed = 1
+            wheels.right_motor.speed = 1
+            break
 
 
 def dispense_poms_v2():
@@ -165,74 +205,22 @@ def detect_pom():
 
 def collect_pom():
     spinner_motor.start(Direction.forward)
-    wheels.drive(Direction.forward, cm(10))
-    libwallaby.msleep(1000)
+    wheels.start(Direction.forward)
+    libwallaby.msleep(950)
     spinner_motor.stop()
+    wheels.stop()
 
 
 def detect_color():
     for _ in range(10):
         libwallaby.camera_update()
 
-    red_area = total_area_of_color(red_channel)
-    green_area = total_area_of_color(green_channel)
-
-    if red_area > green_area:
+    if libwallaby.get_object_count(red_channel) > 0:
         return Color.red
-    elif green_area > red_area:
+    elif libwallaby.get_object_count(green_channel) > 0:
         return Color.green
     else:
         return None
-
-
-def total_area_of_color(channel):
-    object_count = libwallaby.get_object_count(channel)
-    area = 0
-
-    for object in range(object_count):
-        area += libwallaby.get_object_area(channel, object)
-
-    return area
-
-
-def wait_until_new_pom(channel):
-    prev_total_area = total_area_of_color(channel)
-
-    while True:
-        total_area = total_area_of_color(channel)
-
-        if total_area > prev_total_area + 500:
-            break
-
-
-def dispense_poms(colors):
-    raise_arm_halfway()
-
-    for color in reversed(colors):
-        if color == Color.red:
-            direction = TurnDirection.left
-            channel = red_channel
-        else:
-            direction = TurnDirection.right
-            channel = green_channel
-
-        angle = 30
-
-        wheels.turn(direction, angle)
-
-        shake()
-        libwallaby.msleep(500)
-
-        # Dispense the pom
-
-        spinner_motor.start(Direction.reverse)
-        wait_until_new_pom(channel)
-        spinner_motor.stop()
-        libwallaby.msleep(100)
-
-        # Reset position
-
-        wheels.turn(direction.toggle(), angle)
 
 
 def shake():
@@ -240,9 +228,16 @@ def shake():
 
     for _ in range(5):
         wheels.turn(TurnDirection.left, shake_angle)
-        raise_arm()
         wheels.turn(TurnDirection.right, shake_angle)
-        raise_arm_halfway()
+
+
+def channel_of(color):
+    if color == Color.red:
+        return red_channel
+    elif color == Color.green:
+        return green_channel
+    else:
+        raise ValueError("expected color")
 
 
 def pom_detected():

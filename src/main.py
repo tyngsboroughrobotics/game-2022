@@ -14,7 +14,7 @@ def exit():
 def exit_on_enter():
     print("Press Enter to exit")
     input()
-    print("Exiting...", flush=True)
+    print("Exiting...")
     exit()
 
 
