@@ -13,7 +13,7 @@ spinner_motor = Motor(port=2, speed=1)
 wheels = Wheels(
     left_motor=Motor(port=0, speed=1),
     right_motor=Motor(port=1, speed=1),
-    left_offset=0.91,  # if <1, veers to the right
+    left_offset=0.92,  # if <1, veers to the right
     right_offset=1.0,  # if <1, veers to the left
 )
 
@@ -23,20 +23,29 @@ class Color(Enum):
     green = 1
 
 
-half_rotation = 165  # instead of 180 to counter offset
+half_rotation = 130  # instead of 180 to counter offset
 
 
 def main():
-    # NOTE: Start the arm at position 150
+    libwallaby.camera_close()  # to prevent segfaults when the camera is opened twice
 
-    libwallaby.camera_close()
+    # wait_for_light() # FIXME: ENABLE FOR COMPETITION!
+
     libwallaby.camera_open()
-
     raise_arm()
 
-    # Reposition inside the starting box
+    # Wait for the Create
 
-    libwallaby.msleep(1000)  # wait for the Create
+    libwallaby.msleep(1000)
+
+    # Knock the rings out of the way
+
+    distance = m(0.7)
+    wheels.drive(Direction.forward, distance)
+    wheels.turn(TurnDirection.left, 15)  # to counter offset
+    wheels.drive(Direction.reverse, distance + cm(5))
+
+    # Reposition inside the starting box
 
     wheels.drive(Direction.forward, cm(4))
     wheels.turn(TurnDirection.left, 90)
@@ -93,8 +102,8 @@ def main():
 
     # Turn around
 
-    wheels.turn(TurnDirection.left, half_rotation)
-    wheels.drive(Direction.forward, m(0.45))
+    wheels.turn(TurnDirection.right, half_rotation)
+    wheels.drive(Direction.forward, m(0.4))
 
     # Collect the remaining (green) poms
 
@@ -124,6 +133,18 @@ def main():
     dispense_poms()
 
     # TODO
+
+
+def wait_for_light():
+    port = 0
+    threshold = 100
+
+    ambient = libwallaby.analog(port)
+    while ambient - libwallaby.analog(port) < threshold:
+        print("\rLight:", ambient - libwallaby.analog(port), end="")
+        pass
+
+    print()
 
 
 def raise_arm():
@@ -248,7 +269,7 @@ def shake():
         wheels.turn(TurnDirection.right, shake_angle)
 
     # fix the offset
-    wheels.turn(TurnDirection.right, shake_angle / 2)
+    wheels.turn(TurnDirection.right, shake_angle / 4)
 
 
 def channel_of(color):
