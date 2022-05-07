@@ -1,4 +1,5 @@
 import time
+from threading import Timer
 
 from lib.libwallaby import libwallaby
 from lib.wheels import *
@@ -23,34 +24,36 @@ class Color(Enum):
     green = 1
 
 
-half_rotation = 130  # instead of 180 to counter offset
+half_rotation = 155  # instead of 180 to counter offset
 
 
 def main():
     libwallaby.camera_close()  # to prevent segfaults when the camera is opened twice
 
-    # wait_for_light() # FIXME: ENABLE FOR COMPETITION!
-
+    # Reset to initial positions -- the rings should be placed so the
+    # Fisher-Price logo faces the robot
     libwallaby.camera_open()
     raise_arm()
 
     # Wait for the Create
 
-    libwallaby.msleep(1000)
+    libwallaby.msleep(4000)
 
     # Knock the rings out of the way
 
-    distance = m(0.7)
+    distance = m(0.6)
     wheels.drive(Direction.forward, distance)
     wheels.turn(TurnDirection.left, 15)  # to counter offset
-    wheels.drive(Direction.reverse, distance + cm(5))
+    wheels.drive(Direction.reverse, distance / 2)
+    wheels.turn(TurnDirection.left, 10)  # to counter offset
+    wheels.drive(Direction.reverse, distance / 2 + cm(5))
 
     # Reposition inside the starting box
 
     wheels.drive(Direction.forward, cm(4))
     wheels.turn(TurnDirection.left, 90)
     wheels.drive(Direction.reverse, cm(21))
-    wheels.turn(TurnDirection.right, 80)
+    wheels.turn(TurnDirection.right, 75)
 
     # Collect only the red poms
 
@@ -66,10 +69,7 @@ def main():
         def collect():
             nonlocal number_of_red_poms
 
-            wheels.start(Direction.forward)
-            run_until_poms(None, timeout=3)
-            wheels.stop()
-
+            drive_toward_pom()
             align_wheels_to_pom()
 
             wheels.drive(Direction.forward, cm(1))
@@ -85,7 +85,7 @@ def main():
 
         with_reset_wheels(collect)
 
-        wheels.turn(TurnDirection.right, 80)
+        wheels.turn(TurnDirection.right, 82)
 
         wheels.drive(Direction.forward, distance_between_poms)
 
@@ -93,7 +93,7 @@ def main():
 
     wheels.drive(Direction.forward, m(0.5))
     wheels.turn(TurnDirection.left, 90)
-    wheels.drive(Direction.forward, cm(15))
+    wheels.drive(Direction.forward, cm(25))
     wheels.turn(TurnDirection.right, 90)
 
     # Dispense the red poms
@@ -110,10 +110,7 @@ def main():
     number_of_green_poms = number_of_poms - number_of_red_poms
 
     for _ in range(number_of_green_poms):
-        wheels.start(Direction.forward)
-        run_until_poms(None, timeout=5)
-        wheels.stop()
-
+        drive_toward_pom()
         align_wheels_to_pom()
 
         wheels.drive(Direction.forward, cm(2))
@@ -132,19 +129,17 @@ def main():
     wheels.turn(TurnDirection.left, 30)
     dispense_poms()
 
-    # TODO
 
+def drive_toward_pom():
+    wheels.left_motor.speed = 0.5
+    wheels.right_motor.speed = 0.5
 
-def wait_for_light():
-    port = 0
-    threshold = 100
+    wheels.start(Direction.forward)
+    run_until_poms(None, timeout=5)
+    wheels.stop()
 
-    ambient = libwallaby.analog(port)
-    while ambient - libwallaby.analog(port) < threshold:
-        print("\rLight:", ambient - libwallaby.analog(port), end="")
-        pass
-
-    print()
+    wheels.left_motor.speed = 1
+    wheels.right_motor.speed = 1
 
 
 def raise_arm():
@@ -202,7 +197,7 @@ def dispense_poms():
     raise_arm_halfway()
     spinner_motor.start(Direction.reverse)
 
-    for _ in range(7):
+    for _ in range(10):
         shake()
 
     spinner_motor.stop()
@@ -269,7 +264,7 @@ def shake():
         wheels.turn(TurnDirection.right, shake_angle)
 
     # fix the offset
-    wheels.turn(TurnDirection.right, shake_angle / 4)
+    wheels.turn(TurnDirection.right, shake_angle / 6)
 
 
 def channel_of(color):
@@ -282,7 +277,8 @@ def channel_of(color):
 
 
 def pom_detected():
-    libwallaby.camera_update()
+    for _ in range(10):
+        libwallaby.camera_update()
 
     return (
         libwallaby.get_object_count(red_channel) > 0
